@@ -16,6 +16,54 @@ export const DEMO_PRODUCTS: Product[] = [
         images: ["https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?q=80&w=600"],
         status: 'available',
         created_at: new Date().toISOString()
+    },
+    {
+        id: "xbox-series-x-001",
+        name: "Xbox Series X 1TB",
+        description: "The fastest, most powerful Xbox ever. 4K gaming at up to 120 FPS.",
+        price: 49990,
+        type: 'buy',
+        category: 'Xbox',
+        stock: 10,
+        images: ["https://images.unsplash.com/photo-1621259182902-3b836c824e22?q=80&w=600"],
+        status: 'available',
+        created_at: new Date().toISOString()
+    },
+    {
+        id: "ps5-controller-dual-sense",
+        name: "PS5 DualSense Wireless Controller",
+        description: "Immersive haptic feedback, dynamic adaptive triggers, and a built-in microphone.",
+        price: 5990,
+        type: 'buy',
+        category: 'Accessory',
+        stock: 25,
+        images: ["https://images.unsplash.com/photo-1590650046871-92c887180603?q=80&w=600"],
+        status: 'available',
+        created_at: new Date().toISOString()
+    },
+    {
+        id: "meta-quest-3",
+        name: "Meta Quest 3 128GB",
+        description: "Breakthrough mixed reality. 4K+ Infinite Display. Powerful new processor.",
+        price: 44990,
+        type: 'rent',
+        category: 'VR',
+        stock: 3,
+        images: ["https://images.unsplash.com/photo-1622979135225-d2ba269fb1bd?q=80&w=600"],
+        status: 'available',
+        created_at: new Date().toISOString()
+    },
+    {
+        id: "gaming-headset-pro",
+        name: "Razer BlackShark V2 Pro",
+        description: "HyperSpeed Wireless Technology. TriForce Titanium 50mm Drivers.",
+        price: 11990,
+        type: 'buy',
+        category: 'Accessory',
+        stock: 15,
+        images: ["https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?q=80&w=600"],
+        status: 'available',
+        created_at: new Date().toISOString()
     }
 ];
 
