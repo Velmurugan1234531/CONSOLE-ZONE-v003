@@ -78,7 +78,9 @@ export default function ShopProductDetail({ params }: { params: Promise<{ id: st
         );
     }
 
-    const allImages = product.images && product.images.length > 0 ? product.images : [product.image];
+    const allImages = product.images && product.images.length > 0
+        ? product.images
+        : (product.image ? [product.image] : []);
 
     return (
         <div className="min-h-screen relative bg-[#050505] text-white">
