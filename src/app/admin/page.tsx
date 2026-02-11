@@ -138,8 +138,19 @@ export default function AdminDashboard() {
                     <button className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-all">
                         <Activity size={14} /> System Logs
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-[#8B5CF6] border border-[#8B5CF6]/30 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-[#7C3AED] transition-all shadow-[0_4px_20px_rgba(139,92,246,0.3)]">
-                        <ArrowUpRight size={14} /> Export Report
+                    <button
+                        onClick={() => {
+                            const products = localStorage.getItem('console_zone_products_v1');
+                            if (products) {
+                                navigator.clipboard.writeText(products);
+                                alert("Data copied to clipboard! Please paste it in the chat.");
+                            } else {
+                                alert("No local data found to export.");
+                            }
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 bg-[#8B5CF6] border border-[#8B5CF6]/30 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-[#7C3AED] transition-all shadow-[0_4px_20px_rgba(139,92,246,0.3)]"
+                    >
+                        <ArrowUpRight size={14} /> Export Data
                     </button>
                 </div>
             </div>

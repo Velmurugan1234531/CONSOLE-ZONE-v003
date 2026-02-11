@@ -2,42 +2,16 @@ import { createClient } from "@/utils/supabase/client";
 import { Product, ProductType, ProductCategory } from "@/types";
 export type { Product, ProductType, ProductCategory };
 
-const PRODUCTS_STORAGE_KEY = 'console_zone_products_v1';
-
 export const DEMO_PRODUCTS: Product[] = [
     {
-        id: "ps5-disc",
-        name: "PlayStation 5 Console (Disc Edition)",
-        description: "Experience lightning-fast loading with an ultra-high speed SSD, deeper immersion with support for haptic feedback, adaptive triggers, and 3D Audio.",
-        price: 49990,
+        id: "978c1aa9-a069-46a5-b14a-2bcc8d031f10",
+        name: "Sony PS5 Slim Disc Edition (New)",
+        description: "Latest Slim model with 1TB SSD and detachable disc drive.",
+        price: 54990,
         type: 'buy',
         category: 'PS5',
         stock: 5,
-        images: ["/images/products/ps5.png"],
-        status: 'available',
-        created_at: new Date().toISOString()
-    },
-    {
-        id: "xbox-series-x",
-        name: "Xbox Series X",
-        description: "The fastest, most powerful Xbox ever. Explore rich new worlds with 12 teraflops of raw graphic processing power, DirectX ray tracing, and a custom SSD.",
-        price: 48990,
-        type: 'buy',
-        category: 'Xbox',
-        stock: 3,
-        images: ["/images/products/xbox.png"],
-        status: 'available',
-        created_at: new Date().toISOString()
-    },
-    {
-        id: "switch-oled",
-        name: "Nintendo Switch (OLED Model)",
-        description: "Features a vibrant 7-inch OLED screen, a wide adjustable stand, a dock with a wired LAN port, 64 GB of internal storage, and enhanced audio.",
-        price: 32990,
-        type: 'buy',
-        category: 'Accessory',
-        stock: 8,
-        images: ["/images/products/switch.png"],
+        images: ["https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?q=80&w=600"],
         status: 'available',
         created_at: new Date().toISOString()
     }
