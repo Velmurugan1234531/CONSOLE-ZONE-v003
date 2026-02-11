@@ -157,11 +157,12 @@ export const getProducts = async (type?: ProductType, category?: string, include
         console.warn("Supabase fetch failed, falling back to localStorage/Demo:", error);
         if (typeof window !== 'undefined') {
             const stored = localStorage.getItem(PRODUCTS_STORAGE_KEY);
-            products = stored ? JSON.parse(stored) : [];
-        }
-
-        // Final fallback to hardcoded demo data if everything else is empty
-        if (products.length === 0) {
+            if (stored !== null) {
+                products = JSON.parse(stored);
+            } else {
+                products = [...DEMO_PRODUCTS];
+            }
+        } else {
             products = [...DEMO_PRODUCTS];
         }
 
@@ -255,8 +256,10 @@ export const createProduct = async (productData: any) => {
     } catch (error) {
         console.warn("Supabase create failed, using localStorage:", error);
         if (typeof window !== 'undefined') {
-            const existing = JSON.parse(localStorage.getItem(PRODUCTS_STORAGE_KEY) || '[]');
-            localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify([...existing, formatted]));
+            const stored = localStorage.getItem(PRODUCTS_STORAGE_KEY);
+            const existing = stored ? JSON.parse(stored) : [...DEMO_PRODUCTS];
+            const updated = [...existing, formatted];
+            localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(updated));
             return {
                 ...formatted,
                 image: formatted.image || formatted.images?.[0]
@@ -309,8 +312,13 @@ export const updateProduct = async (id: string, productData: Partial<Product>) =
         return { ...data, image: (data as any).image || data.images?.[0] };
     } catch (error) {
         if (typeof window !== 'undefined') {
-            const existing = JSON.parse(localStorage.getItem(PRODUCTS_STORAGE_KEY) || '[]');
+            const stored = localStorage.getItem(PRODUCTS_STORAGE_KEY);
+            const existing = stored ? JSON.parse(stored) : [...DEMO_PRODUCTS];
             const updated = existing.map((p: Product) => p.id === id ? { ...p, ...productData } : p);
+
+            // If it wasn't in the list (e.g. edited a demo product for the first time)
+            // but we have current data, the map handled it if existing included DEMO_PRODUCTS
+
             localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(updated));
             const found = updated.find((p: Product) => p.id === id);
             return found ? { ...found, image: (found as any).image || found.images?.[0] } : null;
@@ -330,7 +338,8 @@ export const deleteProduct = async (id: string) => {
         if (error) throw error;
     } catch (error) {
         if (typeof window !== 'undefined') {
-            const existing = JSON.parse(localStorage.getItem(PRODUCTS_STORAGE_KEY) || '[]');
+            const stored = localStorage.getItem(PRODUCTS_STORAGE_KEY);
+            const existing = stored ? JSON.parse(stored) : [...DEMO_PRODUCTS];
             const updated = existing.filter((p: Product) => p.id !== id);
             localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(updated));
         }

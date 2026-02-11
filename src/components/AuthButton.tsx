@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient } from "@/utils/supabase/client";
-import { Loader2, LogIn, User } from "lucide-react";
+import { Loader2, LogIn, User, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -36,19 +36,28 @@ export default function AuthButton() {
 
     if (user) {
         return (
-            <Link
-                href="/profile"
-                className="flex items-center gap-2 px-4 py-2 bg-[#A855F7]/10 hover:bg-[#A855F7]/20 border border-[#A855F7]/20 rounded-lg text-sm font-bold transition-all text-white group"
-            >
-                <div className="w-5 h-5 rounded-full bg-[#A855F7] flex items-center justify-center text-[10px] text-white overflow-hidden">
-                    {user.user_metadata?.avatar_url ? (
-                        <img src={user.user_metadata.avatar_url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                        <User size={12} />
-                    )}
-                </div>
-                <span className="max-w-[100px] truncate">{user.user_metadata?.full_name || user.email?.split('@')[0]}</span>
-            </Link>
+            <div className="flex items-center gap-2">
+                <Link
+                    href="/profile"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#A855F7]/10 hover:bg-[#A855F7]/20 border border-[#A855F7]/20 rounded-lg text-sm font-bold transition-all text-white group"
+                >
+                    <div className="w-5 h-5 rounded-full bg-[#A855F7] flex items-center justify-center text-[10px] text-white overflow-hidden">
+                        {user.user_metadata?.avatar_url ? (
+                            <img src={user.user_metadata.avatar_url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                            <User size={12} />
+                        )}
+                    </div>
+                    <span className="max-w-[80px] truncate">{user.user_metadata?.full_name || user.email?.split('@')[0]}</span>
+                </Link>
+                <button
+                    onClick={() => supabase.auth.signOut()}
+                    className="p-2 text-gray-500 hover:text-red-500 transition-colors"
+                    title="Logout"
+                >
+                    <LogOut size={18} />
+                </button>
+            </div>
         );
     }
 
