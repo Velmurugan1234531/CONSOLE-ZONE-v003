@@ -45,20 +45,41 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
+    const pathname = request.nextUrl.pathname
 
+    // 1. Public/Guest Redirection (Force Login)
     if (
         !user &&
-        !request.nextUrl.pathname.startsWith('/login') &&
-        !request.nextUrl.pathname.startsWith('/signup') &&
-        !request.nextUrl.pathname.startsWith('/auth') &&
-        !request.nextUrl.pathname.startsWith('/api') &&
-        !request.nextUrl.pathname.startsWith('/_next') &&
-        request.nextUrl.pathname !== '/favicon.ico'
+        !pathname.startsWith('/login') &&
+        !pathname.startsWith('/signup') &&
+        !pathname.startsWith('/auth') &&
+        !pathname.startsWith('/api') &&
+        !pathname.startsWith('/_next') &&
+        pathname !== '/favicon.ico'
     ) {
-        // no user, potentially respond by redirecting the user to the login page
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         return NextResponse.redirect(url)
+    }
+
+    // 2. Admin Route Protection (RBAC)
+    if (user && pathname.startsWith('/admin')) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+
+        if (profile?.role !== 'admin') {
+            const url = request.nextUrl.clone()
+            url.pathname = '/'
+            const redirectResponse = NextResponse.redirect(url)
+            // Ensure session refresh cookies are carried over
+            supabaseResponse.cookies.getAll().forEach(cookie => {
+                redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+            })
+            return redirectResponse
+        }
     }
 
     // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
