@@ -64,6 +64,55 @@ export const DEMO_PRODUCTS: Product[] = [
         images: ["https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?q=80&w=600"],
         status: 'available',
         created_at: new Date().toISOString()
+    },
+    // Trade-In Items (Sell Page)
+    {
+        id: "ps4-pro-1tb-tradein",
+        name: "Sony PS4 Pro 1TB Console",
+        description: "Trade in your old PS4 Pro for cash or credit.",
+        price: 18000,
+        type: 'trade-in',
+        category: 'PS4',
+        stock: 0,
+        images: ["https://images.unsplash.com/photo-1507457379470-08b800bebc67?q=80&w=600"],
+        status: 'available',
+        created_at: new Date().toISOString()
+    },
+    {
+        id: "xbox-one-x-tradein",
+        name: "Xbox One X 1TB Console",
+        description: "Sell your Xbox One X. Best value guaranteed.",
+        price: 16500,
+        type: 'trade-in',
+        category: 'Xbox',
+        stock: 0,
+        images: ["https://images.unsplash.com/photo-1605901309584-818e25960b8f?q=80&w=600"],
+        status: 'available',
+        created_at: new Date().toISOString()
+    },
+    {
+        id: "nintendo-switch-v2-tradein",
+        name: "Nintendo Switch V2 (Neon)",
+        description: "Get great value for your Switch console.",
+        price: 14000,
+        type: 'trade-in',
+        category: 'Consoles',
+        stock: 0,
+        images: ["https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?q=80&w=600"],
+        status: 'available',
+        created_at: new Date().toISOString()
+    },
+    {
+        id: "xbox-series-s-tradein",
+        name: "Xbox Series S Digital",
+        description: "Upgrade to Series X by trading in your Series S.",
+        price: 19000,
+        type: 'trade-in',
+        category: 'Xbox',
+        stock: 0,
+        images: ["https://images.unsplash.com/photo-1621259182902-3b836c824e22?q=80&w=600"],
+        status: 'available',
+        created_at: new Date().toISOString()
     }
 ];
 
