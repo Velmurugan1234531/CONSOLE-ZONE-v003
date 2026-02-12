@@ -54,8 +54,8 @@ export function FleetManager({ hideHeader = false }: { hideHeader?: boolean }) {
     // Add Device State
     const [isAdding, setIsAdding] = useState(false);
     const [newDevice, setNewDevice] = useState<{
-        name: string;
-        serial_number: string;
+        model: string;
+        serialNumber: string;
         category: string;
         health: number;
         notes: string;
@@ -69,8 +69,8 @@ export function FleetManager({ hideHeader = false }: { hideHeader?: boolean }) {
         storage_gb: number;
         firmware_version: string;
     }>({
-        name: "",
-        serial_number: "",
+        model: "",
+        serialNumber: "",
         category: categories[0]?.device_category || "",
         health: 100,
         notes: "",
@@ -106,7 +106,7 @@ export function FleetManager({ hideHeader = false }: { hideHeader?: boolean }) {
     const applyPreset = (preset: DevicePreset) => {
         setNewDevice(prev => ({
             ...prev,
-            name: preset.model,
+            model: preset.model,
             category: preset.category,
             connectors: preset.connectors,
             controllers: preset.controllers,
@@ -157,8 +157,8 @@ export function FleetManager({ hideHeader = false }: { hideHeader?: boolean }) {
             queryClient.invalidateQueries({ queryKey: ['adminDevices'] });
             setIsAdding(false);
             setNewDevice({
-                name: "",
-                serial_number: "",
+                model: "",
+                serialNumber: "",
                 category: categories[0]?.device_category || "",
                 health: 100,
                 notes: "",
@@ -206,7 +206,7 @@ export function FleetManager({ hideHeader = false }: { hideHeader?: boolean }) {
     const handleStartAdd = () => {
         setNewDevice(prev => ({
             ...prev,
-            serial_number: generateNextSerial()
+            serialNumber: generateNextSerial()
         }));
         setIsAdding(true);
     };
@@ -432,7 +432,6 @@ export function FleetManager({ hideHeader = false }: { hideHeader?: boolean }) {
 
         const payload = {
             ...newDevice,
-            serialNumber: newDevice.serial_number, // map to schema
             connectors: newDevice.connectors.split(',').map(s => s.trim()).filter(Boolean),
             asset_records: newDevice.asset_records.split(',').map(s => s.trim()).filter(Boolean)
         };
@@ -1883,8 +1882,8 @@ export function FleetManager({ hideHeader = false }: { hideHeader?: boolean }) {
                                                 <label className="text-[9px] font-black text-gray-600 uppercase">Device Designation</label>
                                                 <input
                                                     required
-                                                    value={newDevice.name}
-                                                    onChange={e => setNewDevice({ ...newDevice, name: e.target.value })}
+                                                    value={newDevice.model}
+                                                    onChange={e => setNewDevice({ ...newDevice, model: e.target.value })}
                                                     className={`w-full bg-black/50 border ${validationErrors.model ? 'border-red-500' : 'border-white/10'} rounded-xl p-4 text-white focus:border-[#8B5CF6] outline-none font-bold text-xs`}
                                                     placeholder="PlayStation 5 Slim..."
                                                 />
@@ -1894,8 +1893,8 @@ export function FleetManager({ hideHeader = false }: { hideHeader?: boolean }) {
                                                 <label className="text-[9px] font-black text-gray-600 uppercase">Serial Matrix</label>
                                                 <input
                                                     required
-                                                    value={newDevice.serial_number}
-                                                    onChange={e => setNewDevice({ ...newDevice, serial_number: e.target.value })}
+                                                    value={newDevice.serialNumber}
+                                                    onChange={e => setNewDevice({ ...newDevice, serialNumber: e.target.value })}
                                                     className={`w-full bg-black/50 border ${validationErrors.serialNumber ? 'border-red-500' : 'border-white/10'} rounded-xl p-4 text-white focus:border-[#8B5CF6] outline-none font-mono text-xs`}
                                                 />
                                                 {validationErrors.serialNumber && <p className="text-[8px] font-black text-red-500 uppercase tracking-widest mt-1">{validationErrors.serialNumber}</p>}

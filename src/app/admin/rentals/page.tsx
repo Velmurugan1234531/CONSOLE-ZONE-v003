@@ -6,7 +6,7 @@ import {
     Calendar as CalendarIcon, FileText, AlertTriangle, CheckCircle2,
     Clock, Monitor as MonitorIcon, Plus, ChevronRight, TrendingUp,
     Zap, Activity, RefreshCw, Terminal, Monitor, Gamepad2,
-    Database, Trash2, type LucideIcon
+    Database, Trash2, Globe, type LucideIcon
 } from "lucide-react";
 import Link from "next/link";
 import { getAllRentals, updateRentalStatus, updateRental } from "@/services/admin";
@@ -205,6 +205,15 @@ export default function RentalsPage() {
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
                             </div>
+
+                            <Link
+                                href="/rental"
+                                target="_blank"
+                                className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest text-emerald-500 hover:bg-emerald-500/20 transition-all shadow-[0_4px_20px_rgba(16,185,129,0.1)] group"
+                            >
+                                <Globe size={14} className="group-hover:rotate-12 transition-transform" />
+                                Live View
+                            </Link>
                         </div>
                     </div>
 

@@ -1001,8 +1001,8 @@ export const getDeviceHistory = async (deviceId: string): Promise<DeviceHistoryL
     ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 };
 export const createDevice = async (deviceData: {
-    name: string;
-    serial_number: string;
+    model: string;
+    serialNumber: string;
     category: string;
     health: number;
     notes?: string;
@@ -1019,8 +1019,8 @@ export const createDevice = async (deviceData: {
 
         const newDevice: Device = {
             id: `demo-local-${Date.now()}`,
-            serialNumber: deviceData.serial_number,
-            model: deviceData.name,
+            serialNumber: deviceData.serialNumber,
+            model: deviceData.model,
             category: deviceData.category,
             status: 'Ready' as Device['status'],
             health: deviceData.health,
@@ -1106,7 +1106,6 @@ export const createDevice = async (deviceData: {
 export const getProfiles = async () => {
     try {
         if (!isSupabaseConfigured()) {
-            console.warn("Supabase not configured, returning demo profiles.");
             const { DEMO_PROFILES } = await import("@/constants/demo-stock");
             return DEMO_PROFILES;
         }
@@ -1118,13 +1117,18 @@ export const getProfiles = async () => {
             .order('full_name', { ascending: true });
 
         if (error) {
-            console.error('getProfiles Error:', error);
+            // Silence noise for development/demo mode if it's just a missing table or auth issue
+            if (process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true') {
+                console.warn("Supabase getProfiles failed, using demo fallback:", error.message || "Table missing or access denied");
+            } else {
+                console.error('getProfiles Error:', error);
+            }
             const { DEMO_PROFILES } = await import("@/constants/demo-stock");
             return DEMO_PROFILES;
         }
         return data || [];
     } catch (err) {
-        console.error("Unexpected error in getProfiles:", err);
+        console.warn("Unexpected error in getProfiles, using demo fallback.");
         const { DEMO_PROFILES } = await import("@/constants/demo-stock");
         return DEMO_PROFILES;
     }

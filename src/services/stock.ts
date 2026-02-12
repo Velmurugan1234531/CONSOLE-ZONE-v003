@@ -42,7 +42,7 @@ const aggregateStock = (devices: Device[]): StockItem[] => {
                 total: 0,
                 rented: 0,
                 available: 0,
-                image: (['ps5', 'ps4', 'xbox'].some(type => cat.includes(type)))
+                image: (['ps5', 'ps4', 'xbox', 'switch', 'vr', 'quest', 'meta'].some(type => cat.includes(type)))
                     ? `/assets/products/${cat}-console.png`
                     : CONSOLE_IMAGES.default.preview,
                 label: device.category,
@@ -79,9 +79,22 @@ function emitChange() {
     }
 }
 
-const getMergedDemoDevices = (): StockItem[] => {
-    let allDevices: Device[] = [...DEMO_DEVICES];
+const getMergedDevices = (dbDevices: Device[] = []): Device[] => {
+    let allDevices = [...dbDevices];
+
     if (typeof window !== 'undefined') {
+        const localAdded = localStorage.getItem('DEMO_ADDED_DEVICES');
+        if (localAdded) {
+            try {
+                const added = JSON.parse(localAdded);
+                // Filter out any added devices that might already be in DB (by serial)
+                const newAdded = added.filter((a: Device) => !allDevices.some(d => d.serialNumber === a.serialNumber));
+                allDevices = [...allDevices, ...newAdded];
+            } catch (e) {
+                console.error("Failed to parse local added devices", e);
+            }
+        }
+
         const localUpdates = localStorage.getItem('DEMO_UPDATED_DEVICES');
         if (localUpdates) {
             try {
@@ -91,21 +104,17 @@ const getMergedDemoDevices = (): StockItem[] => {
                     return update ? { ...d, ...update } : d;
                 });
             } catch (e) {
-                console.error("Failed to parse local device updates:", e);
-            }
-        }
-
-        const localAdded = localStorage.getItem('DEMO_ADDED_DEVICES');
-        if (localAdded) {
-            try {
-                const addedDevices = JSON.parse(localAdded);
-                allDevices = [...allDevices, ...addedDevices];
-            } catch (e) {
-                console.error("Failed to parse local demo devices:", e);
+                console.error("Failed to parse local device updates", e);
             }
         }
     }
-    return aggregateStock(allDevices);
+
+    // Default Mixin: If no devices at all, use DEMO_DEVICES
+    if (allDevices.length === 0) {
+        return DEMO_DEVICES;
+    }
+
+    return allDevices;
 };
 
 export const StockService = {
@@ -115,49 +124,33 @@ export const StockService = {
 
         const fetchStock = async () => {
             try {
-                if (!isSupabaseConfigured()) {
-                    console.warn("Dev Mode: Skipping persistence cache for fresh data.");
-                    setStock(getMergedDemoDevices());
-                    setLoading(false);
-                    return;
-                }
-
                 let consoles: Device[] = [];
-                try {
-                    const supabase = createClient();
-                    const { data, error } = await supabase.from('consoles').select('*');
-                    if (error) {
-                        console.warn("Supabase fetch failed (using fallback):", error.message);
-                        consoles = [];
-                    } else {
-                        consoles = data as Device[];
+
+                if (isSupabaseConfigured()) {
+                    try {
+                        const supabase = createClient();
+                        const { data, error } = await supabase.from('consoles').select('*');
+                        if (!error && data) {
+                            consoles = data as Device[];
+                        }
+                    } catch (err: unknown) {
+                        console.warn("Supabase issue:", err);
                     }
-                } catch (err: unknown) {
-                    // Suppress connection errors or missing table errors
-                    const msg = err instanceof Error ? err.message : String(err);
-                    console.warn("Supabase issue:", msg);
-                    consoles = [];
                 }
 
-                const result = aggregateStock(consoles || []);
+                // Merge DB results with demo and local storage items
+                const allDevices = getMergedDevices(consoles);
+                const result = aggregateStock(allDevices);
 
-                const finalStock = result.length > 0 ? result : DEFAULT_STOCK;
-                setStock(finalStock);
+                setStock(result);
 
                 if (typeof window !== 'undefined') {
-                    localStorage.setItem(STOCK_KEY, JSON.stringify(finalStock));
+                    localStorage.setItem(STOCK_KEY, JSON.stringify(result));
                 }
             } catch (e: unknown) {
-                // Outer catch: only log unique unexpected errors
-                const msg = e instanceof Error ? e.message : "Unknown error";
-                console.warn("Using demo stock due to error:", msg);
-                if (!isSupabaseConfigured()) {
-                    setStock(DEFAULT_STOCK); // Reset to default while loading fresh
-                    console.warn("Dev Mode: Skipping persistence cache for fresh data.");
-                } else {
-                    const stored = typeof window !== 'undefined' ? localStorage.getItem(STOCK_KEY) : null;
-                    setStock(stored ? JSON.parse(stored) : DEFAULT_STOCK);
-                }
+                console.warn("Using stored stock due to error:", e);
+                const stored = typeof window !== 'undefined' ? localStorage.getItem(STOCK_KEY) : null;
+                setStock(stored ? JSON.parse(stored) : aggregateStock(getMergedDevices([])));
             } finally {
                 setLoading(false);
             }
@@ -199,23 +192,20 @@ export const StockService = {
 
     getItems: async (): Promise<StockItem[]> => {
         try {
-            if (!isSupabaseConfigured()) {
-                // Ignore cache, always recalculate for accuracy in dev mode
-                return getMergedDemoDevices();
+            let consoles: Device[] = [];
+
+            if (isSupabaseConfigured()) {
+                const supabase = createClient();
+                const { data, error } = await supabase.from('consoles').select('*');
+                if (!error && data) {
+                    consoles = data as Device[];
+                }
             }
 
-            const supabase = createClient();
-            const { data: consoles, error } = await supabase.from('consoles').select('*');
-            if (error) throw error;
-
-            return aggregateStock(consoles as Device[] || []);
+            return aggregateStock(getMergedDevices(consoles));
         } catch (e: unknown) {
-            console.error("Stock.getItems error:", {
-                message: e instanceof Error ? e.message : "Unknown error",
-                raw: e
-            });
-            // Fallback to merged demo data
-            return getMergedDemoDevices();
+            console.error("Stock.getItems error:", e);
+            return aggregateStock(getMergedDevices([]));
         }
     },
 

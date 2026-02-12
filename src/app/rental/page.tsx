@@ -94,13 +94,13 @@ export default function RentalPage() {
     // Compute dynamic plans based on stock and catalog
     const dynamicPlans = stock.reduce((acc: any, item) => {
         // Try to find exact config match first
-        let config = catalogSettings.find(s => s.device_category === item.label);
+        let config = catalogSettings.find(s => s.device_category.toLowerCase() === (item.label || '').toLowerCase());
 
         // Fallback: Try to match by "base" category if exact match fails (e.g. "PS5 Pro" -> use "PS5" pricing)
         if (!config) {
             const baseCategory = item.id.includes('ps5') ? 'PS5' : item.id.includes('ps4') ? 'PS4' : item.id.includes('xbox') ? 'Xbox' : null;
             if (baseCategory) {
-                config = catalogSettings.find(s => s.device_category === baseCategory);
+                config = catalogSettings.find(s => s.device_category.toLowerCase() === baseCategory.toLowerCase());
             }
         }
 
@@ -258,7 +258,7 @@ export default function RentalPage() {
                                         {/* Dev Mode / Admin Link */}
                                         {process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true' && (
                                             <Link
-                                                href={`/admin/fleet?search=${activeTab}`}
+                                                href={`/admin/rentals?view=fleet&search=${activeTab}`}
                                                 target="_blank"
                                                 className="block w-full text-center py-2 text-[10px] font-mono text-gray-500 hover:text-[#8B5CF6] uppercase tracking-widest transition-colors opacity-50 hover:opacity-100"
                                             >
