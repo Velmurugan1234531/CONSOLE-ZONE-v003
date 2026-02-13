@@ -213,14 +213,14 @@ export default function LoginPage() {
                             </button>
                         </div>
 
-                        {process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true' && (
+                        {(process.env.NEXT_PUBLIC_AUTH_BYPASS === 'true' || !auth) && (
                             <button
                                 onClick={handleDemoLogin}
                                 disabled={loading}
                                 className="w-full mt-4 py-4 bg-white/5 border border-dashed border-white/20 hover:border-[#A855F7]/50 hover:bg-[#A855F7]/5 text-gray-400 hover:text-white font-black uppercase tracking-[0.2em] rounded-2xl flex items-center justify-center gap-3 transition-all"
                             >
                                 <Lock size={16} />
-                                <span>Demo / Developer Login</span>
+                                <span>{auth ? "Demo / Developer Login" : "Enter Demo Mode (Auth Offline)"}</span>
                             </button>
                         )}
 
