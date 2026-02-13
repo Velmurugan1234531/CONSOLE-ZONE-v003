@@ -20,7 +20,7 @@ export default function RentalPage() {
     usePageSEO('rentals');
     const stock = StockService.useStock();
     const [catalogSettings, setCatalogSettings] = useState<CatalogSettings[]>([]);
-    const [activeTab, setActiveTab] = useState<string>('');
+    const [activeTab, setActiveTab] = useState<string>('ps5');
     const [visualSettings, setVisualSettings] = useState<VisualSettings | null>(null);
     const [filterCategory, setFilterCategory] = useState('All');
     const [sortBy, setSortBy] = useState<'name' | 'available' | 'price'>('name');
