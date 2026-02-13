@@ -5,7 +5,7 @@ import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut as firebaseSignOut } from "firebase/auth";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { Loader2, LogOut, User, Mail, ShieldCheck, Gamepad2, History, AlertCircle } from "lucide-react";
+import { Loader2, LogOut, User, Mail, ShieldCheck, Gamepad2, History, AlertCircle, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import PageHero from "@/components/layout/PageHero";
 import { useVisuals } from "@/context/visuals-context";
@@ -42,14 +42,13 @@ export default function ProfilePage() {
                 };
                 setUser(currentUser);
 
-                // Fetch Profile details (for KYC status)
-                // Note: This will use the placeholder Supabase client if not configured
-                // but we keep the logic for future compatibility or if it's partially working
+                // Fetch real mission records
                 try {
-                    setProfile({ kyc_status: 'NOT_SUBMITTED', neural_sync_xp: 750 });
-                    setRentals([]); // Fallback during migration
+                    setProfile({ kyc_status: 'APPROVED', neural_sync_xp: 750 }); // Mocked for now
+                    const data = await getUserRentals(firebaseUser.uid);
+                    setRentals(data);
                 } catch (e) {
-                    console.error("Failed to load data", e);
+                    console.error("Failed to load records", e);
                 }
                 setLoading(false);
             } else {
@@ -58,7 +57,16 @@ export default function ProfilePage() {
                 if (demoUser) {
                     const parsed = JSON.parse(demoUser);
                     setUser(parsed);
-                    setProfile({ kyc_status: 'NOT_SUBMITTED', neural_sync_xp: 750 });
+                    setProfile({ kyc_status: 'APPROVED', neural_sync_xp: 750 });
+
+                    // Fetch demo mission records
+                    try {
+                        const data = await getUserRentals('demo-user-123');
+                        setRentals(data);
+                    } catch (e) {
+                        setRentals([]);
+                    }
+
                     setLoading(false);
                 } else {
                     router.push("/login");
@@ -257,77 +265,109 @@ export default function ProfilePage() {
                                 </div>
 
                                 {/* Activity */}
-                                <div className="space-y-6">
-                                    <h2 className="text-sm font-black uppercase tracking-[0.3em] text-[#A855F7] mb-4">Mission Logs</h2>
+                                <div className="space-y-12">
+                                    {/* Active Deployments */}
+                                    <div className="space-y-6">
+                                        <h2 className="text-xs font-black uppercase tracking-[0.3em] text-[#A855F7] flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-[#A855F7] animate-pulse" />
+                                            Active Deployments
+                                        </h2>
 
-                                    {rentals.length === 0 ? (
-                                        <div className="bg-white/5 border border-white/5 rounded-2xl p-6 flex flex-col items-center justify-center text-center space-y-4 min-h-[200px]">
-                                            <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center">
-                                                <History size={24} className="text-gray-700" />
+                                        {rentals.filter(r => ['active', 'overdue', 'shipped'].includes(r.status)).length === 0 ? (
+                                            <div className="bg-white/5 border border-white/5 rounded-2xl p-6 text-center text-gray-500 text-[10px] uppercase font-bold tracking-widest">
+                                                No active missions in sector.
                                             </div>
-                                            <div>
-                                                <div className="text-sm text-gray-400 font-medium">No active missions found.</div>
-                                                <div className="text-[10px] text-gray-600 uppercase tracking-widest mt-2">Start your first deployment</div>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                {rentals.filter(r => ['active', 'overdue', 'shipped'].includes(r.status)).map((rental) => (
+                                                    <div key={rental.id} className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-5 hover:border-[#A855F7]/30 transition-all group relative overflow-hidden">
+                                                        {rental.status === 'overdue' && (
+                                                            <div className="absolute top-0 right-0 p-2 bg-red-500/10 border-l border-b border-red-500/20 rounded-bl-xl">
+                                                                <span className="text-[8px] font-black text-red-500 uppercase tracking-tighter">SIGNAL_LOST</span>
+                                                            </div>
+                                                        )}
+                                                        <div className="flex justify-between items-start mb-4">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="w-12 h-12 rounded-xl bg-black border border-white/10 overflow-hidden">
+                                                                    <img
+                                                                        src={rental.product?.image || (rental.product?.images && rental.product.images[0]) || "/images/products/ps5.png"}
+                                                                        className="w-full h-full object-cover"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <h3 className="text-sm font-bold text-white group-hover:text-[#A855F7] transition-colors">{rental.product?.name}</h3>
+                                                                    <p className="text-[10px] text-gray-500 font-mono">
+                                                                        ID: {rental.id.slice(0, 8)} • Ends {format(new Date(rental.end_date), 'MMM dd')}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded border ${rental.status === 'active' ? 'bg-green-500/10 text-green-500 border-green-500/20' :
+                                                                rental.status === 'overdue' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+                                                                    'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                                                }`}>
+                                                                {rental.status}
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Assigned Unit Details */}
+                                                        <div className="bg-white/5 rounded-xl p-3 border border-white/5 flex justify-between items-center group-hover:bg-[#A855F7]/5 transition-all">
+                                                            <div>
+                                                                <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mb-1">Hardware ID</p>
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className={`w-1.5 h-1.5 rounded-full ${rental.status === 'active' ? 'bg-emerald-500' : 'bg-red-500'} animate-pulse`} />
+                                                                    <span className="text-xs text-white font-mono">{rental.console?.name || "TACTICAL_HARDWARE"} (SN: {rental.console?.serial_number || "X-000"})</span>
+                                                                </div>
+                                                            </div>
+                                                            <Link href="/track">
+                                                                <button className="text-[9px] text-[#A855F7] hover:text-white font-black uppercase tracking-widest underline decoration-[#A855F7]/30 flex items-center gap-1">
+                                                                    Live Trace <ChevronRight size={10} />
+                                                                </button>
+                                                            </Link>
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
-                                            <Link href="/rental" className="pt-2">
-                                                <button className="px-6 py-2 bg-[#A855F7]/20 hover:bg-[#A855F7]/30 border border-[#A855F7]/30 text-[#A855F7] text-[10px] font-black uppercase tracking-[0.2em] rounded-lg transition-all">
-                                                    Browse Gear
-                                                </button>
-                                            </Link>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-4">
-                                            {rentals.map((rental) => (
-                                                <div key={rental.id} className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-5 hover:border-white/20 transition-all group">
-                                                    <div className="flex justify-between items-start mb-4">
+                                        )}
+                                    </div>
+
+                                    {/* Mission History */}
+                                    <div className="space-y-6">
+                                        <h2 className="text-xs font-black uppercase tracking-[0.3em] text-gray-500 flex items-center gap-2">
+                                            <History size={16} />
+                                            Mission Archive
+                                        </h2>
+
+                                        {rentals.filter(r => ['completed', 'cancelled'].includes(r.status)).length === 0 ? (
+                                            <div className="bg-white/5 border border-white/5 rounded-2xl p-6 text-center text-gray-700 text-[10px] uppercase font-bold tracking-widest italic">
+                                                Archive registers are empty.
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                {rentals.filter(r => ['completed', 'cancelled'].includes(r.status)).map((rental) => (
+                                                    <div key={rental.id} className="bg-white/5 border border-white/5 rounded-xl p-4 flex items-center justify-between group hover:bg-white/[0.08] transition-all">
                                                         <div className="flex items-center gap-4">
-                                                            <div className="w-12 h-12 rounded-xl bg-black border border-white/10 overflow-hidden">
-                                                                <img src={rental.product?.images?.[0] || rental.product?.image} className="w-full h-full object-cover" />
+                                                            <div className="w-10 h-10 rounded-lg bg-black border border-white/10 overflow-hidden opacity-50 contrast-125 grayscale group-hover:grayscale-0 transition-all">
+                                                                <img
+                                                                    src={rental.product?.image || (rental.product?.images && rental.product.images[0]) || "/images/products/ps5.png"}
+                                                                    className="w-full h-full object-cover"
+                                                                />
                                                             </div>
                                                             <div>
-                                                                <h3 className="text-sm font-bold text-white group-hover:text-[#A855F7] transition-colors">{rental.product?.name}</h3>
-                                                                <p className="text-[10px] text-gray-500 font-mono">
-                                                                    ID: {rental.id.slice(0, 8)} • {format(new Date(rental.start_date), 'MMM dd')} - {format(new Date(rental.end_date), 'MMM dd')}
+                                                                <h4 className="text-[11px] font-bold text-gray-400 group-hover:text-white transition-colors">{rental.product?.name}</h4>
+                                                                <p className="text-[9px] text-gray-600 font-mono">
+                                                                    {format(new Date(rental.start_date), 'MMM dd')} - {format(new Date(rental.end_date), 'MMM dd')}
                                                                 </p>
                                                             </div>
                                                         </div>
-                                                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded border ${rental.status === 'active' ? 'bg-green-500/10 text-green-500 border-green-500/20' :
-                                                            rental.status === 'overdue' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
-                                                                'bg-gray-500/10 text-gray-400 border-gray-500/20'
-                                                            }`}>
-                                                            {rental.status}
-                                                        </span>
-                                                    </div>
-
-                                                    {/* Assigned Unit Details */}
-                                                    <div className="bg-white/5 rounded-xl p-3 mb-3 border border-white/5 flex justify-between items-center">
-                                                        <div>
-                                                            <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mb-1">Assigned Unit</p>
-                                                            {rental.console ? (
-                                                                <div className="flex items-center gap-2">
-                                                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                                                    <span className="text-xs text-white font-mono">{rental.console.name} (SN: {rental.console.serial_number})</span>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="flex items-center gap-2">
-                                                                    <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
-                                                                    <span className="text-xs text-yellow-500 font-mono">Pending Assignment</span>
-                                                                </div>
-                                                            )}
+                                                        <div className="text-right">
+                                                            <div className="text-[10px] font-bold text-gray-400">₹{rental.total_price.toLocaleString()}</div>
+                                                            <span className="text-[8px] font-black uppercase tracking-tighter text-gray-600">{rental.status}</span>
                                                         </div>
-                                                        {rental.status === 'active' && (
-                                                            <button
-                                                                onClick={() => alert("Report Issue feature coming soon! Contact support for immediate help.")}
-                                                                className="text-[9px] text-red-400 hover:text-red-300 font-bold uppercase tracking-widest underline decoration-dotted"
-                                                            >
-                                                                Report Issue
-                                                            </button>
-                                                        )}
                                                     </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>

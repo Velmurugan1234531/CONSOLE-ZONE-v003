@@ -75,7 +75,7 @@ export const DEMO_RENTALS = [
         user_id: "demo-user-123",
         product: {
             name: "Xbox Series X",
-            images: ["https://images.unsplash.com/photo-1621259182902-885437815cf1?q=80&w=300"]
+            images: ["/images/products/xbox.png"]
         },
         console: {
             name: "Xbox Series X",
@@ -86,5 +86,22 @@ export const DEMO_RENTALS = [
         start_date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
         end_date: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
         created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+        id: "rental-demo-3",
+        user_id: "demo-user-123",
+        product: {
+            name: "PlayStation VR2 Horizon Pack",
+            images: ["/images/products/psvr2.png"]
+        },
+        console: {
+            name: "PS VR2 Unit 04",
+            serial_number: "VR-992211",
+            category: "VR"
+        },
+        status: "overdue",
+        start_date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+        end_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // Expired yesterday
+        created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
     }
 ];
