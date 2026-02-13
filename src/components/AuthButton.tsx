@@ -12,22 +12,42 @@ export default function AuthButton() {
 
     useEffect(() => {
         // Priority: Check real Firebase session
-        if (!auth) return;
+        if (!auth) {
+            // Fallback: Check for Local Demo User
+            const demoUser = localStorage.getItem('DEMO_USER_SESSION');
+            if (demoUser) {
+                setUser(JSON.parse(demoUser));
+            } else {
+                setUser(null);
+            }
+            setLoading(false);
+            return;
+        }
+
         const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
             if (firebaseUser) {
                 // Adapt Firebase user object to match expected UI structure
-                setUser({
-                    ...firebaseUser,
-                    user_metadata: {
-                        full_name: firebaseUser.displayName,
-                        avatar_url: firebaseUser.photoURL
-                    }
-                });
+                try {
+                    setUser({
+                        ...firebaseUser,
+                        user_metadata: {
+                            full_name: firebaseUser.displayName,
+                            avatar_url: firebaseUser.photoURL
+                        }
+                    });
+                } catch (e) {
+                    console.error("Auth User Adapter Error", e);
+                    setUser(null);
+                }
             } else {
                 // Fallback: Check for Local Demo User
                 const demoUser = localStorage.getItem('DEMO_USER_SESSION');
                 if (demoUser) {
-                    setUser(JSON.parse(demoUser));
+                    try {
+                        setUser(JSON.parse(demoUser));
+                    } catch (e) {
+                        setUser(null);
+                    }
                 } else {
                     setUser(null);
                 }
