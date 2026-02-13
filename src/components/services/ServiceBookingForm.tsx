@@ -60,21 +60,23 @@ export default function ServiceBookingForm({ preselectedServiceId, services }: S
             }
 
             const bookingData: any = {
-                user_id: user?.id || "guest", // Handle guest logic later or make user_id nullable in DB
+                user_id: user?.id || null,
                 service_id: formData.serviceId,
                 device_model: formData.deviceModel,
                 serial_number: formData.serialNumber,
                 issue_description: formData.issueDescription,
                 preferred_date: formData.date,
                 status: 'Pending',
-                contact_phone: formData.contactPhone
+                contact_phone: formData.contactPhone,
+                contact_name: formData.contactName,
+                contact_email: formData.contactEmail
             };
 
             await createServiceBooking(bookingData);
             setStep(5); // Success Step
-        } catch (error) {
+        } catch (error: any) {
             console.error("Booking failed:", error);
-            alert("Failed to submit booking. Please try again.");
+            alert(`Failed to submit booking: ${error.message || error.details || "Unknown error"}`);
         } finally {
             setLoading(false);
         }
