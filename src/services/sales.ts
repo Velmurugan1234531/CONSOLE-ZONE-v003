@@ -97,3 +97,48 @@ export const recordSale = async (sale: Omit<SaleRecord, 'id' | 'date' | 'timesta
 
     return true;
 };
+
+export const getUserSales = async (userId: string): Promise<SaleRecord[]> => {
+    // Demo Mode Support
+    if (userId === 'demo-user-123') {
+        const { DEMO_RENTALS } = await import("@/constants/demo-stock");
+        // Mock a purchase based on xbox demo product
+        return [{
+            id: "sale-demo-1",
+            user_id: userId,
+            items: [{
+                product_id: "prod-xbox",
+                product_name: "Xbox Wireless Controller",
+                price: 5490,
+                quantity: 1,
+                total: 5490
+            }],
+            total_amount: 5490,
+            payment_method: 'upi',
+            status: 'completed',
+            date: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+            timestamp: Date.now() - 60 * 24 * 60 * 60 * 1000
+        }];
+    }
+
+    const supabase = createClient();
+    const { data, error } = await supabase
+        .from('sales')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        return [];
+    }
+
+    return (data || []).map((sale: any) => ({
+        id: sale.id,
+        items: sale.items,
+        total_amount: Number(sale.total_amount),
+        payment_method: sale.payment_method,
+        status: sale.status,
+        date: sale.created_at,
+        timestamp: new Date(sale.created_at).getTime()
+    }));
+};

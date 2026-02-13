@@ -99,3 +99,33 @@ export const updateTradeInStatus = async (id: string, status: TradeInRequest['st
         }
     }
 };
+
+export const getUserTradeInRequests = async (userId: string): Promise<TradeInRequest[]> => {
+    // Demo Mode Support
+    if (userId === 'demo-user-123') {
+        const allTradeIns = await getTradeInRequests();
+        return allTradeIns.filter(t => t.user_id === 'u-001' || t.user_id === 'demo-user-123');
+    }
+
+    const supabase = createClient();
+
+    const { data, error } = await supabase
+        .from('trade_in_requests')
+        .select(`
+            *,
+            user:users(full_name)
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        // Fallback to mock data if table doesn't exist or error occurs
+        const allTradeIns = await getTradeInRequests();
+        return allTradeIns.slice(0, 1); // Just return one for visualization
+    }
+
+    return data.map((item: any) => ({
+        ...item,
+        user_name: item.user?.full_name || "Unknown User"
+    }));
+};

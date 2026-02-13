@@ -11,6 +11,8 @@ import PageHero from "@/components/layout/PageHero";
 import { useVisuals } from "@/context/visuals-context";
 import { getUserRentals } from "@/services/rentals";
 import { getUserServiceBookings } from "@/services/service-booking";
+import { getUserTradeInRequests } from "@/services/tradeins";
+import { getUserSales } from "@/services/sales";
 import KYCForm from "@/components/KYCForm";
 import { format } from "date-fns";
 import NeuralRoadmap from "@/components/profile/NeuralRoadmap";
@@ -18,9 +20,11 @@ import NeuralRoadmap from "@/components/profile/NeuralRoadmap";
 export default function ProfilePage() {
     const [user, setUser] = useState<any>(null);
     const [rentals, setRentals] = useState<any[]>([]);
+    const [serviceBookings, setServiceBookings] = useState<any[]>([]);
+    const [tradeIns, setTradeIns] = useState<any[]>([]);
+    const [sales, setSales] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<any>(null);
-    const [serviceBookings, setServiceBookings] = useState<any[]>([]);
     const [showKYC, setShowKYC] = useState(false);
 
     const router = useRouter();
@@ -47,12 +51,16 @@ export default function ProfilePage() {
                 // Fetch real mission records
                 try {
                     setProfile({ kyc_status: 'APPROVED', neural_sync_xp: 750 }); // Mocked for now
-                    const [rentalData, serviceData] = await Promise.all([
+                    const [rentalData, serviceData, tradeInData, salesData] = await Promise.all([
                         getUserRentals(firebaseUser.uid),
-                        getUserServiceBookings(firebaseUser.uid)
+                        getUserServiceBookings(firebaseUser.uid),
+                        getUserTradeInRequests(firebaseUser.uid),
+                        getUserSales(firebaseUser.uid)
                     ]);
                     setRentals(rentalData);
                     setServiceBookings(serviceData);
+                    setTradeIns(tradeInData);
+                    setSales(salesData);
                 } catch (e) {
                     console.error("Failed to load records", e);
                 }
@@ -67,15 +75,21 @@ export default function ProfilePage() {
 
                     // Fetch demo mission records
                     try {
-                        const [rentalData, serviceData] = await Promise.all([
+                        const [rentalData, serviceData, tradeInData, salesData] = await Promise.all([
                             getUserRentals('demo-user-123'),
-                            getUserServiceBookings('demo-user-123')
+                            getUserServiceBookings('demo-user-123'),
+                            getUserTradeInRequests('demo-user-123'),
+                            getUserSales('demo-user-123')
                         ]);
                         setRentals(rentalData);
                         setServiceBookings(serviceData);
+                        setTradeIns(tradeInData);
+                        setSales(salesData);
                     } catch (e) {
                         setRentals([]);
                         setServiceBookings([]);
+                        setTradeIns([]);
+                        setSales([]);
                     }
 
                     setLoading(false);
@@ -407,8 +421,8 @@ export default function ProfilePage() {
                                                             </div>
                                                         </div>
                                                         <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded border ${svc.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
-                                                                svc.status === 'Cancelled' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
-                                                                    'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                                                            svc.status === 'Cancelled' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+                                                                'bg-orange-500/10 text-orange-400 border-orange-500/20'
                                                             }`}>
                                                             {svc.status}
                                                         </span>
@@ -416,6 +430,62 @@ export default function ProfilePage() {
                                                 ))}
                                             </div>
                                         )}
+                                    </div>
+
+                                    {/* Financial Ledger (Trade-Ins & Purchases) */}
+                                    <div className="space-y-6">
+                                        <h2 className="text-xs font-black uppercase tracking-[0.3em] text-[#FACC15] flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-[#FACC15] animate-pulse" />
+                                            Financial Ledger
+                                        </h2>
+
+                                        <div className="grid grid-cols-1 gap-4">
+                                            {/* Purchases */}
+                                            {sales.length > 0 && (
+                                                <div className="space-y-4">
+                                                    <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest ml-1">Acquisition History</p>
+                                                    {sales.map(sale => (
+                                                        <div key={sale.id} className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex items-center justify-between group hover:border-[#FACC15]/30 transition-all">
+                                                            <div>
+                                                                <h4 className="text-[11px] font-bold text-white uppercase tracking-tight line-clamp-1">{sale.items[0]?.product_name || "Nexus Hardware"}</h4>
+                                                                <p className="text-[9px] text-gray-500 font-mono italic">{format(new Date(sale.date), 'MMM dd, yyyy')} • {sale.payment_method?.toUpperCase()}</p>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <div className="text-[10px] font-black text-white">₹{sale.total_amount.toLocaleString()}</div>
+                                                                <span className="text-[8px] font-black uppercase text-emerald-500 tracking-tighter">SECURE_PAY</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Trade-Ins */}
+                                            {tradeIns.length > 0 && (
+                                                <div className="space-y-4">
+                                                    <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest ml-1">Asset Offloading</p>
+                                                    {tradeIns.map(trade => (
+                                                        <div key={trade.id} className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex items-center justify-between group hover:border-[#FACC15]/30 transition-all">
+                                                            <div>
+                                                                <h4 className="text-[11px] font-bold text-white uppercase tracking-tight">{trade.item_name}</h4>
+                                                                <p className="text-[9px] text-gray-500 font-mono italic">{format(new Date(trade.created_at), 'MMM dd, yyyy')} • {trade.condition}</p>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <div className="text-[10px] font-black text-[#A855F7]">+₹{trade.offered_credit.toLocaleString()}</div>
+                                                                <span className={`text-[8px] font-black uppercase tracking-tighter ${trade.status === 'approved' ? 'text-emerald-500' :
+                                                                    trade.status === 'rejected' ? 'text-red-500' : 'text-orange-400'
+                                                                    }`}>{trade.status}</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {sales.length === 0 && tradeIns.length === 0 && (
+                                                <div className="bg-white/5 border border-white/5 rounded-2xl p-6 text-center text-gray-500 text-[10px] uppercase font-bold tracking-widest">
+                                                    No financial transactions recorded.
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
