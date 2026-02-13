@@ -17,93 +17,56 @@ export default function ServicesPage() {
     const [content, setContent] = useState({ title: 'HARDWARE LAB', subtitle: "Precision Diagnostics & Professional Restoration" });
     const [visualSettings, setVisualSettings] = useState<VisualSettings | null>(null);
 
+    const [services, setServices] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
     useEffect(() => {
         const load = async () => {
-            const settings = await VisualsService.getSettings();
-            setVisualSettings(settings);
-            if (settings.pageContent.services_title) {
+            const visualSettings = await VisualsService.getSettings();
+            setVisualSettings(visualSettings);
+            if (visualSettings.pageContent.services_title) {
                 setContent({
-                    title: settings.pageContent.services_title,
-                    subtitle: settings.pageContent.services_subtitle
+                    title: visualSettings.pageContent.services_title,
+                    subtitle: visualSettings.pageContent.services_subtitle
                 });
+            }
+
+            try {
+                // Import dynamically to avoid server-side issues if any
+                const { getServices } = await import('@/services/repair-services');
+                const data = await getServices();
+                const activeServices = data.filter(s => s.status === 'Active');
+                setServices(activeServices);
+            } catch (error) {
+                console.error("Failed to load services", error);
+            } finally {
+                setLoading(false);
             }
         };
         load();
     }, []);
 
-    const [isAdmin, setIsAdmin] = useState(false);
-    const [clickCount, setClickCount] = useState(0);
-
-    const handleTitleClick = () => {
-        const newCount = clickCount + 1;
-        setClickCount(newCount);
-        if (newCount === 5) {
-            setIsAdmin(!isAdmin);
-            setClickCount(0);
+    const getServiceIcon = (category: string) => {
+        switch (category) {
+            case 'Repair': return <Cpu size={40} className="text-[#A855F7]" />;
+            case 'Maintenance': return <Zap size={40} className="text-[#39ff14]" />;
+            case 'Modification': return <Gamepad2 size={40} className="text-[#8B5CF6]" />;
+            default: return <Cog size={40} className="text-white" />;
         }
     };
 
-    const handleUpdate = async (id: string, field: string, value: any) => {
-        if (!visualSettings) return;
-        const currentData = visualSettings.servicesData || {};
-        const serviceData = currentData[id] || {};
-
-        const newData = { ...serviceData, [field]: value };
-
-        // Optimistic update
-        setVisualSettings({
-            ...visualSettings,
-            servicesData: {
-                ...currentData,
-                [id]: newData
-            }
-        } as VisualSettings);
-
-        await VisualsService.updateServiceData(id, { [field]: value });
+    const getServiceColor = (category: string) => {
+        switch (category) {
+            case 'Repair': return "#A855F7";
+            case 'Maintenance': return "#39ff14";
+            case 'Modification': return "#8B5CF6";
+            default: return "#FFFFFF";
+        }
     };
-
-    const services = [
-        {
-            id: "hardware",
-            title: "Hardware Repair",
-            defaultDesc: "Fixing HDMI ports, overheating issues, disc drive failures, and motherboard repairs.",
-            icon: <Cpu size={40} className="text-[#A855F7]" />,
-            defaultPrice: "Starting at ₹2,499",
-            color: "#A855F7"
-        },
-        {
-            id: "controller",
-            title: "Controller Specialty",
-            defaultDesc: "Stick drift fix, button replacement, battery upgrades, and shell customization for Pro gear.",
-            icon: <Gamepad2 size={40} className="text-[#8B5CF6]" />,
-            defaultPrice: "Starting at ₹999",
-            color: "#8B5CF6"
-        },
-        {
-            id: "cleaning",
-            title: "Internal Optimization",
-            defaultDesc: "Complete internal dust removal, thermal paste replacement, and fan optimization for silent operation.",
-            icon: <Zap size={40} className="text-[#39ff14]" />,
-            defaultPrice: "₹1,499",
-            color: "#39ff14"
-        },
-        {
-            id: "software",
-            title: "System Recovery",
-            defaultDesc: "Fixing bricked consoles, update loops, storage upgrades (SSD installation), and data recovery.",
-            icon: <Cog size={40} className="text-white" />,
-            defaultPrice: "Starting at ₹1,299",
-            color: "#FFFFFF"
-        },
-    ];
 
     return (
         <div className="min-h-screen relative bg-[#050505] overflow-hidden">
-            {isAdmin && (
-                <div className="fixed top-24 right-4 z-[100] bg-red-600 text-white px-4 py-2 rounded-full font-bold uppercase tracking-widest text-xs animate-pulse shadow-[0_0_20px_rgba(220,38,38,0.5)]">
-                    Master Control Active
-                </div>
-            )}
+
 
             <PageHero
                 title={content.title}
@@ -121,73 +84,55 @@ export default function ServicesPage() {
 
             <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 pb-32 pt-20 relative z-20">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {services.map((service, index) => {
-                        const savedData = visualSettings?.servicesData?.[service.id];
-                        const price = savedData?.price || service.defaultPrice;
-                        const description = savedData?.description || service.defaultDesc;
-                        const isActive = savedData?.active !== false; // Default to true
-
-                        return (
+                    {loading ? (
+                        <div className="col-span-full text-center py-20 text-gray-500 font-mono animate-pulse">
+                            INITIALIZING SERVICES DATABASE...
+                        </div>
+                    ) : services.length === 0 ? (
+                        <div className="col-span-full text-center py-20 text-gray-500 font-mono">
+                            NO ACTIVE SERVICES FOUND.
+                        </div>
+                    ) : (
+                        services.map((service, index) => (
                             <motion.div
                                 initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
                                 whileInView={{ opacity: 1, x: 0 }}
                                 viewport={{ once: true }}
                                 key={service.id}
-                                className={`group bg-[#0a0a0a] border border-white/5 rounded-3xl p-10 hover:border-[#A855F7]/30 transition-all duration-500 hover:shadow-[0_0_50px_rgba(168,85,247,0.1)] flex flex-col relative overflow-hidden ${!isActive ? 'opacity-50 grayscale' : ''}`}
+                                className="group bg-[#0a0a0a] border border-white/5 rounded-3xl p-10 hover:border-[#A855F7]/30 transition-all duration-500 hover:shadow-[0_0_50px_rgba(168,85,247,0.1)] flex flex-col relative overflow-hidden"
                             >
                                 {/* Abstract Glow Background */}
                                 <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#A855F7]/5 rounded-full blur-[80px] group-hover:bg-[#A855F7]/10 transition-all" />
 
                                 <div className="flex items-start justify-between mb-8 relative z-10">
                                     <div className="p-5 bg-white/5 rounded-2xl border border-white/5 group-hover:scale-110 transition-transform duration-500 shadow-inner">
-                                        {service.icon}
+                                        {getServiceIcon(service.category)}
                                     </div>
                                     <div className="text-right flex flex-col items-end gap-2">
                                         <p className="text-[10px] text-gray-600 font-mono uppercase font-black tracking-widest mb-1">Service Tier</p>
-
-                                        {isAdmin ? (
-                                            <button
-                                                onClick={() => handleUpdate(service.id, 'active', !isActive)}
-                                                className={`px-3 py-1 rounded text-[10px] font-black uppercase tracking-wider ${isActive ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}
-                                            >
-                                                {isActive ? 'ACTIVE' : 'DISABLED'}
-                                            </button>
-                                        ) : (
-                                            isActive && <p className="text-[#A855F7] font-mono text-xs uppercase font-bold tracking-widest italic group-hover:animate-pulse">Active</p>
-                                        )}
+                                        <p className="text-[#A855F7] font-mono text-xs uppercase font-bold tracking-widest italic opacity-0 group-hover:opacity-100 transition-opacity">
+                                            {service.category}
+                                        </p>
                                     </div>
                                 </div>
 
-                                <h3 className="text-3xl font-black text-white mb-4 uppercase tracking-tight group-hover:text-[#A855F7] transition-colors">{service.title}</h3>
-
-                                {isAdmin ? (
-                                    <textarea
-                                        value={description}
-                                        onChange={(e) => handleUpdate(service.id, 'description', e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 p-2 rounded text-gray-400 text-xs mb-4 min-h-[80px]"
-                                    />
-                                ) : (
-                                    <p className="text-gray-500 text-base mb-10 flex-grow font-light leading-relaxed max-w-sm">{description}</p>
-                                )}
+                                <h3 className="text-3xl font-black text-white mb-4 uppercase tracking-tight group-hover:text-[#A855F7] transition-colors">{service.name}</h3>
+                                <p className="text-gray-500 text-base mb-10 flex-grow font-light leading-relaxed max-w-sm">
+                                    {service.description || "Professional grade repair and maintenance service."}
+                                </p>
 
                                 <div className="flex items-center justify-between mt-auto pt-8 border-t border-white/5 relative z-10">
-                                    {isAdmin ? (
-                                        <input
-                                            value={price}
-                                            onChange={(e) => handleUpdate(service.id, 'price', e.target.value)}
-                                            className="bg-white/5 border border-white/10 p-2 rounded text-xl font-black text-white w-40"
-                                        />
-                                    ) : (
-                                        <span className="text-2xl font-black text-white font-display uppercase tracking-widest italic">{price}</span>
-                                    )}
-
-                                    <button disabled={!isActive} className="flex items-center gap-3 bg-white/5 hover:bg-[#A855F7] hover:text-white px-8 py-4 rounded-xl font-black uppercase tracking-widest transition-all text-xs group/btn shadow-inner disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] text-gray-500 uppercase font-bold mb-1">Estimated Cost</span>
+                                        <span className="text-2xl font-black text-white font-display uppercase tracking-widest italic">₹{service.price}</span>
+                                    </div>
+                                    <button className="flex items-center gap-3 bg-white/5 hover:bg-[#A855F7] hover:text-white px-8 py-4 rounded-xl font-black uppercase tracking-widest transition-all text-xs group/btn shadow-inner">
                                         BOOK NOW <ArrowRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
                                     </button>
                                 </div>
                             </motion.div>
-                        );
-                    })}
+                        ))
+                    )}
                 </div>
 
                 {/* Call to Action Section */}
