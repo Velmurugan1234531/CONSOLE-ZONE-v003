@@ -12,6 +12,7 @@ import Link from "next/link";
 import { getAllRentals, updateRentalStatus, updateRental } from "@/services/admin";
 import { format } from "date-fns";
 import dynamic from 'next/dynamic';
+import { calculateRentalProgress, formatTimeRemaining } from "@/utils/duration";
 
 const RentalCalendar = dynamic(() => import("@/components/admin/RentalCalendar").then(mod => mod.RentalCalendar), { ssr: false });
 const RentalStats = dynamic(() => import("@/components/admin/RentalStats").then(mod => mod.RentalStats), { ssr: false });
@@ -19,6 +20,7 @@ const RentalFinancials = dynamic(() => import("@/components/admin/RentalFinancia
 const ConsoleStockManager = dynamic(() => import("@/components/admin/ConsoleStockManager").then(mod => mod.ConsoleStockManager), { ssr: false });
 const FleetManager = dynamic(() => import("@/components/admin/FleetManager").then(mod => mod.FleetManager), { ssr: false });
 const ManualBooking = dynamic(() => import("@/components/admin/ManualBooking").then(mod => mod.ManualBooking), { ssr: false });
+const FleetCommandNexus = dynamic(() => import("@/components/admin/master/FleetCommandNexus").then(mod => mod.FleetCommandNexus), { ssr: false });
 
 import { ReturnModal } from "@/components/admin/ReturnModal";
 import { AssignUnitModal } from "@/components/admin/AssignUnitModal";
@@ -28,7 +30,7 @@ import { getAllDevices } from "@/services/admin";
 import { Device } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
 
-type ViewType = 'monitor' | 'ledger' | 'booking' | 'calendar' | 'fleet' | 'engine';
+type ViewType = 'monitor' | 'tracking' | 'ledger' | 'booking' | 'calendar' | 'fleet' | 'engine';
 
 export default function RentalsPage() {
     const [rentals, setRentals] = useState<any[]>([]);
@@ -53,7 +55,7 @@ export default function RentalsPage() {
         setMounted(true);
         const params = new URLSearchParams(window.location.search);
         const view = params.get('view') as ViewType;
-        if (view && ['monitor', 'ledger', 'booking', 'calendar', 'fleet', 'engine'].includes(view)) {
+        if (view && ['monitor', 'tracking', 'ledger', 'booking', 'calendar', 'fleet', 'engine'].includes(view)) {
             setActiveView(view);
         }
     }, []);
@@ -171,6 +173,12 @@ export default function RentalsPage() {
                                     className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${activeView === 'monitor' ? 'bg-[#06B6D4] text-black shadow-[0_0_15px_rgba(6,182,212,0.3)]' : 'text-gray-500 hover:text-white'}`}
                                 >
                                     <MonitorIcon size={12} /> Monitor
+                                </button>
+                                <button
+                                    onClick={() => setActiveView('tracking')}
+                                    className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${activeView === 'tracking' ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)]' : 'text-gray-500 hover:text-white'}`}
+                                >
+                                    <Activity size={12} /> Live Trace
                                 </button>
                                 <button
                                     onClick={() => setActiveView('ledger')}
@@ -297,14 +305,32 @@ export default function RentalsPage() {
                                             </span>
                                         </div>
 
-                                        <div className="space-y-2 mb-4">
+                                        <div className="space-y-3 mb-6">
                                             <div className="flex justify-between text-[9px] uppercase font-bold tracking-widest">
                                                 <span className="text-gray-500">Customer</span>
                                                 <span className="text-white truncate max-w-[100px]">{rental.user?.full_name}</span>
                                             </div>
+
+                                            <div className="space-y-1.5">
+                                                <div className="flex justify-between text-[8px] uppercase font-black tracking-widest">
+                                                    <span className="text-gray-500">Mission Progress</span>
+                                                    <span className="text-blue-400">
+                                                        {calculateRentalProgress(rental.start_date, rental.end_date).toFixed(0)}%
+                                                    </span>
+                                                </div>
+                                                <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full bg-[#06B6D4] shadow-[0_0_10px_rgba(6,182,212,0.5)]"
+                                                        style={{ width: `${calculateRentalProgress(rental.start_date, rental.end_date)}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+
                                             <div className="flex justify-between text-[9px] uppercase font-bold tracking-widest">
-                                                <span className="text-gray-500">Expiring</span>
-                                                <span className="text-orange-400">{format(new Date(rental.end_date), 'MMM dd')}</span>
+                                                <span className="text-gray-500">Uplink Time</span>
+                                                <span className="text-orange-400 font-mono text-[8px]">
+                                                    {formatTimeRemaining(rental.end_date)}
+                                                </span>
                                             </div>
                                         </div>
 
@@ -332,6 +358,12 @@ export default function RentalsPage() {
                                         <p className="font-bold uppercase tracking-[0.3em] text-[10px]">Zero Active Deployments Detected</p>
                                     </div>
                                 )}
+                            </div>
+                        )}
+
+                        {activeView === 'tracking' && (
+                            <div className="h-full animate-in fade-in duration-700">
+                                <FleetCommandNexus />
                             </div>
                         )}
 

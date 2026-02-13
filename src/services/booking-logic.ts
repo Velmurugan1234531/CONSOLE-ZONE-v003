@@ -132,17 +132,39 @@ export const BookingLogic = {
      * Validate current user constraints for booking
      */
     async validateUserConstraints(userId: string) {
-        const supabase = await createClient();
+        // Bypass for demo users or if Supabase is missing
+        const isDemo = userId.startsWith('demo-') || userId === 'demo-user-123';
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const isConfigured = !!supabaseUrl && supabaseUrl.startsWith('http');
 
+        if (!isConfigured || isDemo) {
+            console.warn(`[BOOKING] Bypassing validation for ${isDemo ? 'DEMO user' : 'UNCONFIGURED Supabase'}`);
+            return {
+                isVerified: true, // Allow booking in demo mode
+                canPickup: true,
+                isFirstTime: false
+            };
+        }
+
+        const supabase = await createClient();
         const { data: user, error } = await supabase
             .from('users')
             .select('kyc_status, total_bookings')
             .eq('id', userId)
-            .single();
+            .maybeSingle();
 
-        if (error || !user) {
-            console.error(`User validation failed for ${userId}: ${error?.message || error}`);
-            throw new Error("User validation failed");
+        if (error) {
+            console.error(`User validation DB error for ${userId}: ${error.message}`);
+            throw new Error("User validation failed due to system error");
+        }
+
+        if (!user) {
+            console.warn(`User ${userId} not found in Supabase. Treating as unverified.`);
+            return {
+                isVerified: false,
+                canPickup: false,
+                isFirstTime: true
+            };
         }
 
         return {
@@ -150,5 +172,13 @@ export const BookingLogic = {
             canPickup: (user.total_bookings || 0) > 0 && user.kyc_status === 'APPROVED',
             isFirstTime: (user.total_bookings || 0) === 0
         };
+    },
+
+    /**
+     * Mock Console Search for Demo Mode
+     */
+    async mockFindAvailableConsole(category: string): Promise<number> {
+        // Return a fixed ID for demo consoles
+        return category.toLowerCase().includes('ps5') ? 101 : 102;
     }
 };

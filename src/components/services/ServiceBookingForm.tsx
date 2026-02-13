@@ -76,7 +76,9 @@ export default function ServiceBookingForm({ preselectedServiceId, services }: S
             setStep(5); // Success Step
         } catch (error: any) {
             console.error("Booking failed:", error);
-            alert(`Failed to submit booking: ${error.message || error.details || "Unknown error"}`);
+            // Firebase errors often have a 'code' property
+            const errorMessage = error.code ? `Firebase Error: ${error.code}` : (error.message || "Unknown error");
+            alert(`Failed to submit booking: ${errorMessage}`);
         } finally {
             setLoading(false);
         }

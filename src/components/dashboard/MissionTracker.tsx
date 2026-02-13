@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, Box, Shield, AlertTriangle, ChevronRight, Activity } from "lucide-react";
+import { Clock, Box, Shield, AlertTriangle, ChevronRight, Activity, Signal } from "lucide-react";
+import { calculateRentalProgress, formatTimeRemaining } from "@/utils/duration";
 
 interface Mission {
     id: string;
     item_name: string;
+    start_date: string;
     return_date: string;
     status: 'active' | 'overdue' | 'shipped';
     image_url: string;
@@ -18,27 +20,24 @@ interface MissionTrackerProps {
 
 export default function MissionTracker({ missions }: MissionTrackerProps) {
     const [timeLeft, setTimeLeft] = useState<{ [key: string]: string }>({});
+    const [progress, setProgress] = useState<{ [key: string]: number }>({});
 
     useEffect(() => {
-        const timer = setInterval(() => {
+        const updateTracker = () => {
             const newTimeLeft: { [key: string]: string } = {};
-            missions.forEach(mission => {
-                const now = new Date().getTime();
-                const target = new Date(mission.return_date).getTime();
-                const difference = target - now;
+            const newProgress: { [key: string]: number } = {};
 
-                if (difference <= 0) {
-                    newTimeLeft[mission.id] = "MISSION_EXPIRED";
-                } else {
-                    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-                    const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const mins = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-                    const secs = Math.floor((difference % (1000 * 60)) / 1000);
-                    newTimeLeft[mission.id] = `${days}D ${hours}H ${mins}M ${secs}S`;
-                }
+            missions.forEach(mission => {
+                newTimeLeft[mission.id] = formatTimeRemaining(mission.return_date);
+                newProgress[mission.id] = calculateRentalProgress(mission.start_date, mission.return_date);
             });
+
             setTimeLeft(newTimeLeft);
-        }, 1000);
+            setProgress(newProgress);
+        };
+
+        updateTracker();
+        const timer = setInterval(updateTracker, 1000);
 
         return () => clearInterval(timer);
     }, [missions]);
@@ -102,11 +101,21 @@ export default function MissionTracker({ missions }: MissionTrackerProps) {
                                                 animate={{ opacity: [0.5, 1, 0.5] }}
                                                 transition={{ duration: 2, repeat: Infinity }}
                                                 className="h-full bg-gradient-to-r from-[#A855F7] to-blue-500"
-                                                style={{ width: '65%' }} // Simulated progress
+                                                style={{ width: `${progress[mission.id] || 0}%` }} // Dynamic progress
                                             />
                                         </div>
                                     </div>
 
+                                    <div className="flex gap-2 pt-1">
+                                        <div className="flex-1 flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-lg border border-white/5">
+                                            <Signal size={10} className="text-emerald-500" />
+                                            <span className="text-[7px] font-black uppercase text-gray-500 font-mono tracking-tighter">UPLINK_STABLE</span>
+                                        </div>
+                                        <div className="px-3 py-1.5 bg-blue-500/10 rounded-lg border border-blue-500/20 flex items-center gap-1.5">
+                                            <div className="w-1 h-1 rounded-full bg-blue-500 animate-ping" />
+                                            <span className="text-[7px] font-black uppercase text-blue-500 tracking-widest">LIVE</span>
+                                        </div>
+                                    </div>
                                     <div className="flex gap-2 pt-1">
                                         <button className="flex-1 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-[8px] font-black uppercase tracking-widest text-white transition-all border border-white/5 flex items-center justify-center gap-1">
                                             <Shield size={10} /> Sync Status

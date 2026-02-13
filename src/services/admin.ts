@@ -777,10 +777,11 @@ export interface KYCSubmissionData {
 export const submitKYC = async (userId: string, data: KYCSubmissionData) => {
     const supabase = createClient();
 
-    // 1. Update the profile with KYC details
+    // 1. Upsert the profile with KYC details (Create if not exists)
     const { error: profileError } = await supabase
         .from('users')
-        .update({
+        .upsert({
+            id: userId, // Ensure ID is set for insertion
             full_name: data.fullName,
             phone: data.phone,
             secondary_phone: data.secondaryPhone,
@@ -796,7 +797,7 @@ export const submitKYC = async (userId: string, data: KYCSubmissionData) => {
             kyc_submitted_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         })
-        .eq('id', userId);
+        .select();
 
     if (profileError) throw profileError;
 
@@ -1080,6 +1081,8 @@ export interface FleetPosition {
     lng: number;
     label: string;
     syncLevel?: number;
+    start_date?: string;
+    end_date?: string;
 }
 
 export const getFleetGeography = async (): Promise<FleetPosition[]> => {
@@ -1105,6 +1108,8 @@ export const getFleetGeography = async (): Promise<FleetPosition[]> => {
                     id,
                     console_id,
                     status,
+                    start_date,
+                    end_date,
                     user:users(id, full_name, location_lat, location_lng, neural_sync_xp)
                 `)
                 .eq('status', 'active');
@@ -1118,32 +1123,41 @@ export const getFleetGeography = async (): Promise<FleetPosition[]> => {
             const userLat = Array.isArray(user) ? user[0]?.location_lat : user?.location_lat;
             const userLng = Array.isArray(user) ? user[0]?.location_lng : user?.location_lng;
 
+            // Neural Live Logic: Add time-based jitter to make markers "move" slightly
+            const time = Date.now() / 2000;
+            const liveJitterLat = Math.sin(time + i) * 0.005;
+            const liveJitterLng = Math.cos(time + i) * 0.005;
+
             if (userLat && userLng) {
                 return {
                     id: d.id,
                     serialNumber: d.serialNumber,
                     model: d.model,
-                    status: d.status,
-                    lat: userLat,
-                    lng: userLng,
+                    status: d.status as Device['status'],
+                    lat: userLat + liveJitterLat,
+                    lng: userLat + liveJitterLng,
                     label: `ACTIVE_DEPLOYMENT: ${d.serialNumber}`,
-                    syncLevel: Array.isArray(user) ? user[0]?.neural_sync_xp : user?.neural_sync_xp
+                    syncLevel: Array.isArray(user) ? user[0]?.neural_sync_xp : user?.neural_sync_xp,
+                    start_date: rental.start_date,
+                    end_date: rental.end_date
                 };
             }
 
             // Fallback: Assign to random hub for demo/availability
             const hub = HUBS[i % HUBS.length];
-            // Add slight jitter to hub coordinates so markers don't stack exactly
-            const jitter = () => (Math.random() - 0.5) * 0.5;
+            const demoStartDate = new Date(Date.now() - 86400000 * 2).toISOString();
+            const demoEndDate = new Date(Date.now() + 86400000 * 5).toISOString();
 
             return {
                 id: d.id,
                 serialNumber: d.serialNumber,
                 model: d.model,
-                status: d.status,
-                lat: hub.lat + jitter(),
-                lng: hub.lng + jitter(),
-                label: d.status === 'Ready' ? `HUB_AVAILABILITY: ${hub.name}` : `MAINTENANCE_DOCK: ${hub.name}`
+                status: d.status as Device['status'],
+                lat: hub.lat + liveJitterLat,
+                lng: hub.lng + liveJitterLng,
+                label: d.status === 'Ready' ? `HUB_AVAILABILITY: ${hub.name}` : `MAINTENANCE_DOCK: ${hub.name}`,
+                start_date: demoStartDate,
+                end_date: demoEndDate
             };
         });
     } catch (error: any) {

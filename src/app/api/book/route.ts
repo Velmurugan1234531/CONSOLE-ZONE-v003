@@ -73,7 +73,16 @@ export async function POST(req: Request) {
         }
 
         // 2. Find Available Console (Tetris Logic)
-        const consoleId = await BookingLogic.findAvailableConsole(productCategory, start, end);
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const isSupabaseConfigured = !!supabaseUrl && supabaseUrl.startsWith('http');
+        const isDemo = userId.startsWith('demo-');
+
+        let consoleId;
+        if (!isSupabaseConfigured || isDemo) {
+            consoleId = await (BookingLogic as any).mockFindAvailableConsole(productCategory);
+        } else {
+            consoleId = await BookingLogic.findAvailableConsole(productCategory, start, end);
+        }
 
         if (!consoleId) {
             return NextResponse.json({
@@ -83,7 +92,16 @@ export async function POST(req: Request) {
         }
 
         // 3. Create Booking Record
-        // 3. Create Rental Record (Unified with Admin System)
+        if (!isSupabaseConfigured || isDemo) {
+            console.log("[BOOKING] SUCCESS (Demo Mode):", { userId, productCategory, consoleId });
+            return NextResponse.json({
+                success: true,
+                bookingId: `demo-${crypto.randomUUID()}`,
+                consoleId: consoleId,
+                message: "Booking confirmed (Demo Mode)!"
+            });
+        }
+
         const supabase = await createClient();
 
         // 3a. Resolve Product ID for the category (needed for rentals table)
@@ -112,7 +130,7 @@ export async function POST(req: Request) {
                 plan_id: planId, // Save the Plan ID
                 start_date: start.toISOString(),
                 end_date: end.toISOString(),
-                status: 'active', // Active immediately upon booking for this flow
+                status: 'Pending', // Requires Admin Approval
                 payment_status: 'paid', // Assuming paid via Razorpay before this call if finalized
                 total_price: body.totalAmount || 0,
                 notes: noteContent,

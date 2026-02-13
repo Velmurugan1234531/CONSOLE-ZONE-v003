@@ -46,4 +46,8 @@ const analytics = (typeof window !== "undefined" && app)
     ? isSupported().then((yes) => (yes ? getAnalytics(app) : null))
     : null;
 
-export { app, auth, analytics };
+// Initialize Firestore
+import { getFirestore } from "firebase/firestore";
+const db = app ? getFirestore(app) : undefined;
+
+export { app, auth, analytics, db };

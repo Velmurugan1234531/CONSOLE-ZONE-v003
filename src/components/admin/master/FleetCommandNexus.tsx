@@ -158,6 +158,19 @@ export function FleetCommandNexus() {
                                                         </span>
                                                     </div>
 
+                                                    {pos.status === 'Rented' && (
+                                                        <div className="mb-3 p-2 bg-blue-500/5 border border-blue-500/10 rounded-lg">
+                                                            <div className="flex justify-between text-[7px] uppercase font-bold text-gray-500 mb-1">
+                                                                <span>Operator</span>
+                                                                <span className="text-white">Alex "Nexus" Chen</span>
+                                                            </div>
+                                                            <div className="flex justify-between text-[7px] uppercase font-bold text-gray-500">
+                                                                <span>Duration</span>
+                                                                <span className="text-white">72H Remaining</span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
                                                     {pos.syncLevel !== undefined && (
                                                         <div className="pt-2 border-t border-white/5 flex flex-col gap-1">
                                                             <div className="flex justify-between text-[7px] uppercase font-bold text-gray-500">

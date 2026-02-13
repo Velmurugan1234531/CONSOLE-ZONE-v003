@@ -2,7 +2,7 @@
 // Rebuild trigger: 2
 
 import Link from "next/link";
-import { LayoutDashboard, Users, Box, QrCode, FileCheck, FileText, LogOut, TrendingUp, Monitor, Gamepad2, Image, ShoppingBag, Tag, Wrench, History as HistoryIcon, Settings, Zap, Bell, DollarSign, Percent, Cpu, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, Users, Box, QrCode, FileCheck, FileText, LogOut, TrendingUp, Monitor, Gamepad2, Image, ShoppingBag, Tag, Wrench, History as HistoryIcon, Settings, Zap, Bell, DollarSign, Percent, Cpu, ShieldCheck, ClipboardList, Clock } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { TopNav } from "@/components/admin/TopNav";
@@ -75,9 +75,10 @@ export default function AdminLayout({
                                         { href: "/admin/rentals", icon: <FileCheck size={20} />, label: "Rental" },
                                         { href: "/admin/invoices", icon: <FileText size={20} />, label: "Invoices" },
                                         { href: "/admin/buy", icon: <Tag size={20} />, label: "Trade-In" },
-                                        { href: "/admin/repairs", icon: <HistoryIcon size={20} />, label: "Repairs" },
                                         { href: "/admin/selling", icon: <ShoppingBag size={20} />, label: "Sell" },
                                         { href: "/admin/services", icon: <Wrench size={20} />, label: "Services" },
+                                        { href: "/admin/service-requests", icon: <ClipboardList size={20} />, label: "Requests" },
+                                        { href: "/admin/rental-requests", icon: <Clock size={20} />, label: "Rentals" },
                                     ].map((item) => (
                                         <Link
                                             key={item.href}

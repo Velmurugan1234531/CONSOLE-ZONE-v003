@@ -452,7 +452,7 @@ export default function BookingForm({ product, initialPlan = 'DAILY' }: BookingF
                 startDate: date?.from,
                 endDate: date?.to,
                 createdAt: new Date().toISOString(),
-                status: 'confirmed',
+                status: 'Pending',
                 totalAmount: calculateTotal()
             };
             const existingBookings = JSON.parse(localStorage.getItem('console-zone-bookings') || '[]');
