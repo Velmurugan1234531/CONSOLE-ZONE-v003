@@ -18,7 +18,7 @@ export const CONSOLE_IMAGES = {
         controller: "/images/products/xbox.png", // Using main console shot if controller shot is missing
     },
     default: {
-        hero: "https://images.unsplash.com/photo-1486401899868-0e435ed85128?q=80&w=1200",
-        preview: "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?q=80&w=1200"
+        hero: "/images/background.png",
+        preview: "/images/backgrounds/bg-1.jpg"
     }
 };

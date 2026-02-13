@@ -59,7 +59,7 @@ export default function Home() {
                         start_date: r.start_date,
                         return_date: r.end_date,
                         status: r.status as any,
-                        image_url: (r.product as any)?.image || (r.product as any)?.images?.[0] || "https://images.unsplash.com/photo-1605898960710-9aa6f496395b?q=80&w=300"
+                        image_url: (r.product as any)?.image || (r.product as any)?.images?.[0] || "/images/products/ps5.png"
                     }));
                 setMissions(activeMissions);
             } catch (err) {

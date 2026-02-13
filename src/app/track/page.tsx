@@ -114,7 +114,7 @@ export default function TrackingPage() {
                                 start_date: userPosition.start_date || new Date(Date.now() - 86400000).toISOString(),
                                 return_date: userPosition.end_date || new Date(Date.now() + 86400000 * 3).toISOString(),
                                 status: 'active',
-                                image_url: 'https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?q=80&w=2070&auto=format&fit=crop'
+                                image_url: "/images/ps5-custom.png"
                             }] : []} />
                         </div>
                     </div>
