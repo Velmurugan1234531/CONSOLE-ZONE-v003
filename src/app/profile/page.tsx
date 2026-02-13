@@ -10,6 +10,7 @@ import Link from "next/link";
 import PageHero from "@/components/layout/PageHero";
 import { useVisuals } from "@/context/visuals-context";
 import { getUserRentals } from "@/services/rentals";
+import { getUserServiceBookings } from "@/services/service-booking";
 import KYCForm from "@/components/KYCForm";
 import { format } from "date-fns";
 import NeuralRoadmap from "@/components/profile/NeuralRoadmap";
@@ -19,6 +20,7 @@ export default function ProfilePage() {
     const [rentals, setRentals] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<any>(null);
+    const [serviceBookings, setServiceBookings] = useState<any[]>([]);
     const [showKYC, setShowKYC] = useState(false);
 
     const router = useRouter();
@@ -45,8 +47,12 @@ export default function ProfilePage() {
                 // Fetch real mission records
                 try {
                     setProfile({ kyc_status: 'APPROVED', neural_sync_xp: 750 }); // Mocked for now
-                    const data = await getUserRentals(firebaseUser.uid);
-                    setRentals(data);
+                    const [rentalData, serviceData] = await Promise.all([
+                        getUserRentals(firebaseUser.uid),
+                        getUserServiceBookings(firebaseUser.uid)
+                    ]);
+                    setRentals(rentalData);
+                    setServiceBookings(serviceData);
                 } catch (e) {
                     console.error("Failed to load records", e);
                 }
@@ -61,10 +67,15 @@ export default function ProfilePage() {
 
                     // Fetch demo mission records
                     try {
-                        const data = await getUserRentals('demo-user-123');
-                        setRentals(data);
+                        const [rentalData, serviceData] = await Promise.all([
+                            getUserRentals('demo-user-123'),
+                            getUserServiceBookings('demo-user-123')
+                        ]);
+                        setRentals(rentalData);
+                        setServiceBookings(serviceData);
                     } catch (e) {
                         setRentals([]);
+                        setServiceBookings([]);
                     }
 
                     setLoading(false);
@@ -363,6 +374,44 @@ export default function ProfilePage() {
                                                             <div className="text-[10px] font-bold text-gray-400">₹{rental.total_price.toLocaleString()}</div>
                                                             <span className="text-[8px] font-black uppercase tracking-tighter text-gray-600">{rental.status}</span>
                                                         </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Service Protocols */}
+                                    <div className="space-y-6">
+                                        <h2 className="text-xs font-black uppercase tracking-[0.3em] text-[#06B6D4] flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-[#06B6D4] animate-pulse" />
+                                            Service Protocols
+                                        </h2>
+
+                                        {serviceBookings.length === 0 ? (
+                                            <div className="bg-white/5 border border-white/5 rounded-2xl p-6 text-center text-gray-500 text-[10px] uppercase font-bold tracking-widest">
+                                                No service history in database.
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                {serviceBookings.map((svc) => (
+                                                    <div key={svc.id} className="bg-[#0A0A0A] border border-white/10 rounded-xl p-4 flex items-center justify-between group hover:border-[#06B6D4]/30 transition-all">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-10 h-10 rounded-lg bg-[#06B6D4]/10 border border-[#06B6D4]/20 flex items-center justify-center">
+                                                                <AlertCircle size={18} className="text-[#06B6D4]" />
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="text-[11px] font-bold text-white group-hover:text-[#06B6D4] transition-colors">{svc.service_type}</h4>
+                                                                <p className="text-[9px] text-gray-500 font-mono">
+                                                                    {svc.console_model} • {format(new Date(svc.created_at), 'MMM dd, yyyy')}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded border ${svc.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                                                                svc.status === 'Cancelled' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+                                                                    'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                                                            }`}>
+                                                            {svc.status}
+                                                        </span>
                                                     </div>
                                                 ))}
                                             </div>

@@ -105,3 +105,21 @@ export const DEMO_RENTALS = [
         created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
     }
 ];
+export const DEMO_SERVICE_BOOKINGS = [
+    {
+        id: "svc-demo-1",
+        user_id: "demo-user-123",
+        service_type: "Cleaning & Maintenance",
+        console_model: "PlayStation 5",
+        status: "Completed",
+        created_at: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+        id: "svc-demo-2",
+        user_id: "demo-user-123",
+        service_type: "HDMI Port Repair",
+        console_model: "Xbox Series X",
+        status: "In Progress",
+        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    }
+];

@@ -22,6 +22,12 @@ export const createServiceBooking = async (bookingData: Partial<ServiceBooking>)
 };
 
 export const getUserServiceBookings = async (userId: string) => {
+    // Demo Mode Support
+    if (userId === 'demo-user-123') {
+        const { DEMO_SERVICE_BOOKINGS } = await import("@/constants/demo-stock");
+        return DEMO_SERVICE_BOOKINGS || [];
+    }
+
     if (!db) return [];
 
     try {
