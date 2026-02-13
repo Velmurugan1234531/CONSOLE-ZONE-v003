@@ -51,7 +51,8 @@ export const getUserRentals = async (userId: string) => {
 
     // Safety check for non-prod environments
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_URL.startsWith('http')) {
-        return [];
+        const { DEMO_RENTALS } = await import("@/constants/demo-stock");
+        return DEMO_RENTALS || [];
     }
 
     const { data, error } = await supabase
@@ -65,5 +66,12 @@ export const getUserRentals = async (userId: string) => {
         .order('created_at', { ascending: false });
 
     if (error) throw error;
+
+    // If no real data, return demo data for development/preview consistency
+    if (!data || data.length === 0) {
+        const { DEMO_RENTALS } = await import("@/constants/demo-stock");
+        return DEMO_RENTALS || [];
+    }
+
     return data as Rental[];
 };
