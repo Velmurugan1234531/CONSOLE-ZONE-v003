@@ -214,3 +214,21 @@ export interface QCRecord {
     notes?: string;
     created_at: string;
 }
+
+export interface ServiceBooking {
+    id: string;
+    user_id: string;
+    service_id: string;
+    device_model: string;
+    serial_number?: string;
+    issue_description: string;
+    preferred_date: string;
+    status: 'Pending' | 'Confirmed' | 'In-Progress' | 'Completed' | 'Cancelled';
+    contact_phone?: string;
+    contact_name?: string;
+    contact_email?: string;
+    created_at: string;
+    // Joins
+    service?: ServiceItem;
+    user?: Profile;
+}

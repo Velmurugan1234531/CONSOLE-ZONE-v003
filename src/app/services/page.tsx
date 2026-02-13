@@ -9,6 +9,7 @@ import { VisualsService, VisualSettings } from "@/services/visuals";
 import { BuilderRenderer } from "@/components/Builder/BuilderRenderer";
 import { useState, useEffect } from "react";
 import { usePageSEO } from "@/hooks/use-seo";
+import Link from "next/link";
 
 import PageHero from "@/components/layout/PageHero";
 
@@ -126,9 +127,9 @@ export default function ServicesPage() {
                                         <span className="text-[10px] text-gray-500 uppercase font-bold mb-1">Estimated Cost</span>
                                         <span className="text-2xl font-black text-white font-display uppercase tracking-widest italic">₹{service.price}</span>
                                     </div>
-                                    <button className="flex items-center gap-3 bg-white/5 hover:bg-[#A855F7] hover:text-white px-8 py-4 rounded-xl font-black uppercase tracking-widest transition-all text-xs group/btn shadow-inner">
+                                    <Link href={`/services/book?serviceId=${service.id}`} className="flex items-center gap-3 bg-white/5 hover:bg-[#A855F7] hover:text-white px-8 py-4 rounded-xl font-black uppercase tracking-widest transition-all text-xs group/btn shadow-inner">
                                         BOOK NOW <ArrowRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
-                                    </button>
+                                    </Link>
                                 </div>
                             </motion.div>
                         ))
