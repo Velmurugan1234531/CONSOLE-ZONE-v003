@@ -99,7 +99,7 @@ export default function Footer() {
 
             <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 pt-10 mt-20 border-t border-white/5">
                 <div className="flex items-center justify-between text-[10px] text-gray-600 font-bold uppercase tracking-widest">
-                    <p>© {new Date().getFullYear()} {visualSettings?.footer?.copyrightText || "Console Zone"}. All rights reserved.</p>
+                    <p>© {new Date().getFullYear()} {visualSettings?.footer?.copyrightText || "Console Zone"}. All rights reserved. <span className="text-[9px] opacity-50 text-blue-500 font-mono ml-2">v007::NEURAL_LINK::ONLINE</span></p>
                     <div className="flex gap-6">
                         <Link href="/policies" className="text-gray-600 hover:text-white text-xs lowercase">Privacy</Link>
                         <Link href="/policies" className="text-gray-600 hover:text-white text-xs lowercase">Terms</Link>
